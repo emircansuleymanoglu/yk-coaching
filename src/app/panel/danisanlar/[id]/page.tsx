@@ -6,7 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveProgram, getFullProgram } from "@/lib/queries";
 import { ProgramView } from "@/components/program/ProgramView";
 import { Button, Card } from "@/components/ui";
-import { createProgramForClient } from "./actions";
+import {
+  createProgramForClient,
+  assignSession,
+  addDailyTask,
+} from "./actions";
+import { Input } from "@/components/ui";
 import type { Profile } from "@/lib/types";
 
 export default async function ClientDetailPage({
@@ -76,6 +81,46 @@ export default async function ClientDetailPage({
             <FileText className="h-4 w-4" /> Program Oluştur
           </Button>
         </form>
+      )}
+
+      {full && full.workouts.length > 0 && (
+        <Card className="space-y-4">
+          <h2 className="font-semibold">Takvime Planla</h2>
+          <form action={assignSession.bind(null, id)} className="grid gap-2">
+            <select
+              name="workout_day_id"
+              required
+              className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 text-sm outline-none focus:border-[var(--primary)]"
+            >
+              <option value="">Antrenman günü seç…</option>
+              {full.workouts.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <Input type="date" name="date" required className="flex-1" />
+              <Button type="submit" size="md">
+                Ata
+              </Button>
+            </div>
+          </form>
+
+          <form
+            action={addDailyTask.bind(null, id)}
+            className="grid gap-2 border-t border-[var(--border)] pt-3"
+          >
+            <p className="text-xs text-[var(--muted)]">Kardiyo / görev ekle</p>
+            <Input name="title" placeholder="Örn. 25 dk yürüyüş bandı" required />
+            <div className="flex gap-2">
+              <Input type="date" name="date" required className="flex-1" />
+              <Button type="submit" variant="outline" size="md">
+                Görev Ekle
+              </Button>
+            </div>
+          </form>
+        </Card>
       )}
 
       {full ? (

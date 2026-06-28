@@ -19,9 +19,12 @@ export default async function PanelLayout({
           <Logo />
         </Link>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-[var(--muted)]">
+          <Link
+            href="/panel/profil"
+            className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+          >
             {profile.full_name || "Hesabım"}
-          </span>
+          </Link>
           <form action={logout}>
             <button
               className="grid h-9 w-9 place-items-center rounded-xl border border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"

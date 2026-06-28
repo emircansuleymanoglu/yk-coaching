@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Home,
   LayoutDashboard,
   Users,
   Dumbbell,
+  CalendarDays,
   LineChart,
   MessageCircle,
   Wallet,
@@ -23,10 +25,11 @@ const coachNav: NavItem[] = [
 ];
 
 const clientNav: NavItem[] = [
-  { href: "/panel", label: "Program", icon: Dumbbell },
+  { href: "/panel", label: "Ana Sayfa", icon: Home },
+  { href: "/panel/takvim", label: "Takvim", icon: CalendarDays },
+  { href: "/panel/program", label: "Program", icon: Dumbbell },
   { href: "/panel/ilerleme", label: "İlerleme", icon: LineChart },
   { href: "/panel/mesajlar", label: "Mesaj", icon: MessageCircle },
-  { href: "/panel/odemeler", label: "Ödeme", icon: Wallet },
 ];
 
 export function BottomNav({ role }: { role: "coach" | "client" }) {

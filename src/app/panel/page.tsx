@@ -1,11 +1,11 @@
 import Link from "next/link";
+import { startOfWeek, endOfWeek, format } from "date-fns";
 import { Users, FileText, Plus, ChevronRight } from "lucide-react";
 import { requireProfile } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveProgram, getFullProgram } from "@/lib/queries";
-import { ProgramView } from "@/components/program/ProgramView";
+import { HomeDashboard } from "@/components/home/HomeDashboard";
 import { Button, Card } from "@/components/ui";
-import type { Profile } from "@/lib/types";
+import type { DailyTask, Profile } from "@/lib/types";
 
 export default async function PanelHome() {
   const profile = await requireProfile();
@@ -86,22 +86,82 @@ async function CoachDashboard() {
   );
 }
 
-/* ----------------------------- Danışan paneli ----------------------------- */
+/* ----------------------------- Danışan ana ekranı ----------------------------- */
 async function ClientHome({ profile }: { profile: Profile }) {
-  const program = await getActiveProgram(profile.id);
-  if (!program) {
-    return (
-      <Card className="mt-6 py-10 text-center">
-        <p className="font-semibold">Programın hazırlanıyor 🏗️</p>
-        <p className="mt-1 text-sm text-[var(--muted)]">
-          Koçun programını yüklediğinde burada görünecek.
-        </p>
-      </Card>
-    );
-  }
-  const full = await getFullProgram(program.id);
-  if (!full) return null;
-  return <ProgramView data={full} />;
+  const supabase = await createClient();
+  const now = new Date();
+  const todayISO = format(now, "yyyy-MM-dd");
+  const weekStart = format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const weekEnd = format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd");
+
+  const [
+    { data: latestCheckin },
+    { data: program },
+    { count: weekDoneCount },
+    { data: todaySession },
+    { data: todayTasks },
+  ] = await Promise.all([
+    supabase
+      .from("checkins")
+      .select("weight, body_fat")
+      .eq("client_id", profile.id)
+      .order("date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("programs")
+      .select("next_control")
+      .eq("client_id", profile.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("workout_sessions")
+      .select("id", { count: "exact", head: true })
+      .eq("client_id", profile.id)
+      .eq("status", "completed")
+      .gte("date", weekStart)
+      .lte("date", weekEnd),
+    supabase
+      .from("workout_sessions")
+      .select("id, workout_day_id, status, workout_days(name)")
+      .eq("client_id", profile.id)
+      .eq("date", todayISO)
+      .order("created_at")
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("daily_tasks")
+      .select("*")
+      .eq("client_id", profile.id)
+      .eq("date", todayISO)
+      .order("created_at"),
+  ]);
+
+  const sessionLabel =
+    todaySession && (todaySession as { workout_days?: { name?: string } | null })
+      ? ((todaySession as { workout_days?: { name?: string } | null }).workout_days
+          ?.name ?? "Antrenman")
+      : null;
+
+  return (
+    <HomeDashboard
+      name={profile.full_name}
+      todayISO={todayISO}
+      weekDoneCount={weekDoneCount ?? 0}
+      latest={
+        latestCheckin
+          ? {
+              weight: latestCheckin.weight ?? null,
+              body_fat: latestCheckin.body_fat ?? null,
+            }
+          : null
+      }
+      nextControl={program?.next_control ?? null}
+      todaySessionLabel={sessionLabel}
+      todayTasks={(todayTasks ?? []) as DailyTask[]}
+    />
+  );
 }
 
 function initials(name: string): string {

@@ -5,6 +5,7 @@ import { requireCoach } from "@/lib/dal";
 import { getFullProgram, type FullProgram } from "@/lib/queries";
 import { sumMacros, kcalFromMacros } from "@/lib/macros";
 import { Button, Card, Input } from "@/components/ui";
+import { ExerciseMediaUpload } from "@/components/program/ExerciseMediaUpload";
 import {
   updateProgramMeta,
   addMeal,
@@ -55,7 +56,12 @@ export default async function ProgramEditor({
       <ProgramMetaSection full={full} ids={ids} />
       <NutritionSection full={full} ids={ids} />
       <SupplementSection full={full} ids={ids} />
-      <WorkoutSection full={full} ids={ids} />
+      <WorkoutSection
+        full={full}
+        ids={ids}
+        clientId={clientId}
+        programId={programId}
+      />
     </div>
   );
 }
@@ -279,9 +285,13 @@ function SupplementSection({
 function WorkoutSection({
   full,
   ids,
+  clientId,
+  programId,
 }: {
   full: FullProgram;
   ids: React.ReactNode;
+  clientId: string;
+  programId: string;
 }) {
   return (
     <section className="space-y-3">
@@ -300,17 +310,27 @@ function WorkoutSection({
           {day.exercises.map((ex) => (
             <div
               key={ex.id}
-              className="flex items-start justify-between rounded-lg bg-[var(--surface-2)] px-3 py-2"
+              className="rounded-lg bg-[var(--surface-2)] px-3 py-2"
             >
-              <div>
-                <p className="text-sm font-medium">{ex.name}</p>
-                <p className="text-xs text-[var(--muted)]">
-                  {[ex.sets, ex.reps, ex.rest].filter(Boolean).join(" · ")}
-                </p>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium">{ex.name}</p>
+                  <p className="text-xs text-[var(--muted)]">
+                    {[ex.sets, ex.reps, ex.rest].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+                <DeleteBtn action={deleteExercise} field="ex_id" id={ex.id}>
+                  {ids}
+                </DeleteBtn>
               </div>
-              <DeleteBtn action={deleteExercise} field="ex_id" id={ex.id}>
-                {ids}
-              </DeleteBtn>
+              <div className="mt-1">
+                <ExerciseMediaUpload
+                  exerciseId={ex.id}
+                  clientId={clientId}
+                  programId={programId}
+                  hasImage={!!(ex.image_url || ex.video_url)}
+                />
+              </div>
             </div>
           ))}
 

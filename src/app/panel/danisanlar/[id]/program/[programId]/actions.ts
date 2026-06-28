@@ -145,3 +145,22 @@ export async function deleteExercise(fd: FormData) {
   await supabase.from("exercises").delete().eq("id", str(fd, "ex_id"));
   await revalidate(fd);
 }
+
+/** Egzersize görsel/video URL'si kaydeder (yükleme client'ta yapılır). */
+export async function setExerciseMedia(args: {
+  exerciseId: string;
+  clientId: string;
+  programId: string;
+  imageUrl?: string | null;
+  videoUrl?: string | null;
+}) {
+  await requireCoach();
+  const supabase = await createClient();
+  const patch: Record<string, string | null> = {};
+  if (args.imageUrl !== undefined) patch.image_url = args.imageUrl;
+  if (args.videoUrl !== undefined) patch.video_url = args.videoUrl;
+  await supabase.from("exercises").update(patch).eq("id", args.exerciseId);
+  revalidatePath(
+    `/panel/danisanlar/${args.clientId}/program/${args.programId}`,
+  );
+}
