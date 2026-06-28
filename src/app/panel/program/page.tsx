@@ -1,6 +1,8 @@
+import { format } from "date-fns";
 import { requireProfile } from "@/lib/dal";
+import { createClient } from "@/lib/supabase/server";
 import { getActiveProgram, getFullProgram } from "@/lib/queries";
-import { ProgramView } from "@/components/program/ProgramView";
+import { ProgramView, type Compliance } from "@/components/program/ProgramView";
 import { Card } from "@/components/ui";
 
 export default async function ClientProgramPage() {
@@ -26,5 +28,30 @@ export default async function ClientProgramPage() {
   }
   const full = await getFullProgram(program.id);
   if (!full) return null;
-  return <ProgramView data={full} />;
+
+  // bugünkü beslenme uyumu
+  const supabase = await createClient();
+  const today = format(new Date(), "yyyy-MM-dd");
+  const [{ data: checks }, { data: water }] = await Promise.all([
+    supabase
+      .from("meal_checks")
+      .select("meal_id")
+      .eq("client_id", profile.id)
+      .eq("date", today)
+      .eq("done", true),
+    supabase
+      .from("water_intake")
+      .select("ml, target_ml")
+      .eq("client_id", profile.id)
+      .eq("date", today)
+      .maybeSingle(),
+  ]);
+
+  const compliance: Compliance = {
+    date: today,
+    checkedMealIds: (checks ?? []).map((c) => c.meal_id),
+    water: { ml: water?.ml ?? 0, target: water?.target_ml ?? 3000 },
+  };
+
+  return <ProgramView data={full} compliance={compliance} />;
 }

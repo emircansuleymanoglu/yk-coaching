@@ -1,15 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { Utensils, Dumbbell, Pill, Flame } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Utensils, Dumbbell, Pill, Flame, Check, Droplet, Plus, Minus } from "lucide-react";
 import type { FullProgram } from "@/lib/queries";
 import { sumMacros } from "@/lib/macros";
 import { cn, formatDate } from "@/lib/utils";
 import { Badge, Card } from "@/components/ui";
+import { toggleMealCheck, addWater } from "@/app/panel/program/actions";
 
 type Tab = "beslenme" | "antrenman" | "supplement";
 
-export function ProgramView({ data }: { data: FullProgram }) {
+export type Compliance = {
+  date: string;
+  checkedMealIds: string[];
+  water: { ml: number; target: number };
+};
+
+export function ProgramView({
+  data,
+  compliance,
+}: {
+  data: FullProgram;
+  compliance?: Compliance;
+}) {
   const [tab, setTab] = useState<Tab>("beslenme");
   const { program, nutrition, supplements, workouts } = data;
 
@@ -62,7 +75,9 @@ export function ProgramView({ data }: { data: FullProgram }) {
         ))}
       </div>
 
-      {tab === "beslenme" && <NutritionTab plans={nutrition} />}
+      {tab === "beslenme" && (
+        <NutritionTab plans={nutrition} compliance={compliance} />
+      )}
       {tab === "antrenman" && <WorkoutTab days={workouts} />}
       {tab === "supplement" && <SupplementTab items={supplements} />}
     </div>
@@ -70,7 +85,13 @@ export function ProgramView({ data }: { data: FullProgram }) {
 }
 
 /* ----------------------------- Beslenme ----------------------------- */
-function NutritionTab({ plans }: { plans: FullProgram["nutrition"] }) {
+function NutritionTab({
+  plans,
+  compliance,
+}: {
+  plans: FullProgram["nutrition"];
+  compliance?: Compliance;
+}) {
   const [dayType, setDayType] = useState<"low" | "high">(
     plans.find((p) => p.day_type === "low") ? "low" : "high",
   );
@@ -81,8 +102,34 @@ function NutritionTab({ plans }: { plans: FullProgram["nutrition"] }) {
   const allItems = active.meals.flatMap((m) => m.items);
   const totals = sumMacros(allItems);
 
+  const checked = new Set(compliance?.checkedMealIds ?? []);
+  const doneCount = active.meals.filter((m) => checked.has(m.id)).length;
+  const pct = active.meals.length
+    ? Math.round((doneCount / active.meals.length) * 100)
+    : 0;
+
   return (
     <div className="space-y-3">
+      {compliance && (
+        <>
+          <WaterCard date={compliance.date} water={compliance.water} />
+          <Card className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">Bugünkü Uyum</span>
+              <span className="font-semibold text-[var(--primary-glow)]">
+                %{pct}
+              </span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-[var(--surface-2)]">
+              <div
+                className="h-full brand-gradient transition-all"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </Card>
+        </>
+      )}
+
       {plans.length > 1 && (
         <div className="flex gap-2">
           {(["low", "high"] as const).map((d) => (
@@ -122,7 +169,16 @@ function NutritionTab({ plans }: { plans: FullProgram["nutrition"] }) {
           <Card key={meal.id} className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold">{meal.name}</h3>
-              <span className="text-xs text-[var(--muted)]">{mt.kcal} kcal</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[var(--muted)]">{mt.kcal} kcal</span>
+                {compliance && (
+                  <MealCheckButton
+                    mealId={meal.id}
+                    date={compliance.date}
+                    initial={checked.has(meal.id)}
+                  />
+                )}
+              </div>
             </div>
             <div className="divide-y divide-[var(--border)]">
               {meal.items.map((it) => (
@@ -230,5 +286,96 @@ function SupplementTab({ items }: { items: FullProgram["supplements"] }) {
 function Empty({ text }: { text: string }) {
   return (
     <Card className="py-8 text-center text-sm text-[var(--muted)]">{text}</Card>
+  );
+}
+
+/* ----------------------------- Su takibi ----------------------------- */
+function WaterCard({
+  date,
+  water,
+}: {
+  date: string;
+  water: { ml: number; target: number };
+}) {
+  const [ml, setMl] = useState(water.ml);
+  const [, start] = useTransition();
+  const pct = water.target ? Math.min(100, Math.round((ml / water.target) * 100)) : 0;
+
+  function change(delta: number) {
+    setMl((m) => Math.max(0, m + delta));
+    start(() => addWater(date, delta, water.target));
+  }
+
+  return (
+    <Card className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Droplet className="h-5 w-5 text-[var(--primary-glow)]" />
+          <span className="font-medium">Su</span>
+        </div>
+        <span className="text-sm font-semibold">
+          {(ml / 1000).toFixed(2)} / {(water.target / 1000).toFixed(1)} L
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-[var(--surface-2)]">
+        <div
+          className="h-full bg-[var(--primary-glow)] transition-all"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => change(-250)}
+          className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--muted)]"
+          aria-label="Azalt"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => change(250)}
+          className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg brand-gradient text-sm font-semibold text-white"
+        >
+          <Plus className="h-4 w-4" /> 250 ml
+        </button>
+        <button
+          onClick={() => change(500)}
+          className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg border border-[var(--border)] text-sm font-semibold"
+        >
+          <Plus className="h-4 w-4" /> 500 ml
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+/* ----------------------------- Öğün işaretleme ----------------------------- */
+function MealCheckButton({
+  mealId,
+  date,
+  initial,
+}: {
+  mealId: string;
+  date: string;
+  initial: boolean;
+}) {
+  const [done, setDone] = useState(initial);
+  const [, start] = useTransition();
+  return (
+    <button
+      onClick={() => {
+        const next = !done;
+        setDone(next);
+        start(() => toggleMealCheck(mealId, date, next));
+      }}
+      className={cn(
+        "grid h-7 w-7 place-items-center rounded-full border-2 transition",
+        done
+          ? "border-transparent bg-[var(--success)] text-white"
+          : "border-[var(--border)] text-transparent",
+      )}
+      aria-label="Yedim"
+    >
+      <Check className="h-4 w-4" />
+    </button>
   );
 }

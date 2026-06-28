@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCoach } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
+import { createNotification, sendEventEmail } from "@/lib/notify";
 
 /** Danışan için boş bir program oluşturur (low + high beslenme planlarıyla). */
 export async function createProgramForClient(clientId: string) {
@@ -37,7 +38,7 @@ export async function assignSession(clientId: string, formData: FormData) {
 
   const { data: day } = await supabase
     .from("workout_days")
-    .select("program_id")
+    .select("program_id, name")
     .eq("id", workoutDayId)
     .single();
 
@@ -48,6 +49,15 @@ export async function assignSession(clientId: string, formData: FormData) {
     date,
     status: "planned",
   });
+
+  await createNotification(supabase, {
+    userId: clientId,
+    type: "workout",
+    title: "Yeni antrenman planlandı",
+    body: `${day?.name ?? "Antrenman"} — ${date}`,
+    link: "/panel/takvim",
+  });
+
   revalidatePath(`/panel/danisanlar/${clientId}`);
 }
 

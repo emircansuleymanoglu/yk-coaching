@@ -5,14 +5,15 @@ import { requireCoach } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveProgram, getFullProgram } from "@/lib/queries";
 import { ProgramView } from "@/components/program/ProgramView";
-import { Button, Card } from "@/components/ui";
+import { Button, Card, Input } from "@/components/ui";
 import {
   createProgramForClient,
   assignSession,
   addDailyTask,
 } from "./actions";
-import { Input } from "@/components/ui";
-import type { Profile } from "@/lib/types";
+import { setCoachComment } from "@/app/panel/ilerleme/actions";
+import { formatDate } from "@/lib/utils";
+import type { Checkin, Profile } from "@/lib/types";
 
 export default async function ClientDetailPage({
   params,
@@ -33,6 +34,14 @@ export default async function ClientDetailPage({
 
   const program = await getActiveProgram(id);
   const full = program ? await getFullProgram(program.id) : null;
+
+  const { data: checkinData } = await supabase
+    .from("checkins")
+    .select("*")
+    .eq("client_id", id)
+    .order("date", { ascending: false })
+    .limit(5);
+  const checkins = (checkinData ?? []) as Checkin[];
 
   const createProgram = createProgramForClient.bind(null, id);
 
@@ -120,6 +129,41 @@ export default async function ClientDetailPage({
               </Button>
             </div>
           </form>
+        </Card>
+      )}
+
+      {checkins.length > 0 && (
+        <Card className="space-y-3">
+          <h2 className="font-semibold">Son Ölçümler</h2>
+          {checkins.map((c) => (
+            <div
+              key={c.id}
+              className="space-y-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-3"
+            >
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">{formatDate(c.date)}</span>
+                <span className="text-[var(--muted)]">
+                  {c.weight != null ? `${c.weight} kg` : "—"}
+                  {c.body_fat != null ? ` · %${c.body_fat}` : ""}
+                </span>
+              </div>
+              {c.notes && <p className="text-sm text-[var(--muted)]">{c.notes}</p>}
+              <form
+                action={setCoachComment.bind(null, c.id, id)}
+                className="flex gap-2"
+              >
+                <Input
+                  name="comment"
+                  defaultValue={c.coach_comment ?? ""}
+                  placeholder="Geri bildirim yaz…"
+                  className="flex-1"
+                />
+                <Button type="submit" size="sm" variant="outline">
+                  Gönder
+                </Button>
+              </form>
+            </div>
+          ))}
         </Card>
       )}
 
