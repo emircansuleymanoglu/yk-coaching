@@ -2,6 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/server";
+import { sendPushToUser } from "@/lib/push";
 
 type NotifInput = {
   userId: string;
@@ -22,6 +23,13 @@ export async function createNotification(
     title: n.title,
     body: n.body ?? null,
     link: n.link ?? null,
+  });
+
+  // aynı bildirimi telefona push olarak da gönder (VAPID varsa)
+  await sendPushToUser(n.userId, {
+    title: n.title,
+    body: n.body,
+    link: n.link,
   });
 }
 

@@ -57,6 +57,11 @@ export async function assignSession(clientId: string, formData: FormData) {
     body: `${day?.name ?? "Antrenman"} — ${date}`,
     link: "/panel/takvim",
   });
+  await sendEventEmail(
+    clientId,
+    "Yeni antrenmanın hazır 💪",
+    `<p>Koçun <b>${day?.name ?? "yeni bir antrenman"}</b> programını <b>${date}</b> tarihine planladı. Takviminden açıp loglayabilirsin.</p>`,
+  );
 
   revalidatePath(`/panel/danisanlar/${clientId}`);
 }
