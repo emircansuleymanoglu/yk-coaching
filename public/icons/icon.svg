@@ -1,0 +1,15 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#c026d3"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#0a0a0f"/>
+  <rect x="28" y="28" width="456" height="456" rx="92" fill="none" stroke="url(#g)" stroke-width="10" opacity="0.6"/>
+  <g fill="url(#g)" font-family="Arial, Helvetica, sans-serif" font-weight="800">
+    <text x="256" y="300" font-size="220" text-anchor="middle" letter-spacing="-8">YK</text>
+  </g>
+  <text x="256" y="380" font-size="46" text-anchor="middle" fill="#9a9ab0"
+        font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="6">COACHING</text>
+</svg>
