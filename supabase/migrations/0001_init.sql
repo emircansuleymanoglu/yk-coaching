@@ -228,7 +228,7 @@ alter table public.payments        enable row level security;
 -- profiles: herkes kendi profilini görür/günceller; koç hepsini yönetir
 drop policy if exists "profil_self_select" on public.profiles;
 create policy "profil_self_select" on public.profiles
-  for select using (id = auth.uid() or public.is_coach());
+  for select using (id = auth.uid() or public.is_coach() or role = 'coach');
 drop policy if exists "profil_self_update" on public.profiles;
 create policy "profil_self_update" on public.profiles
   for update using (id = auth.uid() or public.is_coach());
