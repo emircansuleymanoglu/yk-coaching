@@ -82,6 +82,60 @@ export type WaterIntake = {
   target_ml: number;
 };
 
+export type ProgramTemplate = {
+  id: string;
+  coach_id: string;
+  title: string;
+  weeks: number;
+  payload: TemplatePayload;
+  created_at: string;
+};
+
+export type TemplatePayload = {
+  nutrition: {
+    day_type: DayType;
+    target_kcal: number | null;
+    notes: string | null;
+    meals: {
+      name: string;
+      notes: string | null;
+      items: {
+        food_name: string;
+        grams: number;
+        protein: number;
+        carb: number;
+        fat: number;
+      }[];
+    }[];
+  }[];
+  supplements: {
+    name: string;
+    serving: string | null;
+    timing: string | null;
+    kind: SuppKind;
+  }[];
+  workouts: {
+    name: string;
+    exercises: {
+      name: string;
+      sets: string | null;
+      reps: string | null;
+      rest: string | null;
+      notes: string | null;
+      image_url: string | null;
+      video_url: string | null;
+    }[];
+  }[];
+};
+
+export type Badge = {
+  id: string;
+  client_id: string;
+  code: string;
+  title: string;
+  earned_at: string;
+};
+
 export type Notification = {
   id: string;
   user_id: string;

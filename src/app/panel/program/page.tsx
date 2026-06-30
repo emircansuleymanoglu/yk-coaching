@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { Download } from "lucide-react";
 import { requireProfile } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveProgram, getFullProgram } from "@/lib/queries";
@@ -53,5 +54,19 @@ export default async function ClientProgramPage() {
     water: { ml: water?.ml ?? 0, target: water?.target_ml ?? 3000 },
   };
 
-  return <ProgramView data={full} compliance={compliance} />;
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <a
+          href={`/yazdir/${program.id}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
+        >
+          <Download className="h-3.5 w-3.5" /> PDF
+        </a>
+      </div>
+      <ProgramView data={full} compliance={compliance} />
+    </div>
+  );
 }

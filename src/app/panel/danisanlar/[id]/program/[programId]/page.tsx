@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, Eye } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Eye, BookmarkPlus } from "lucide-react";
+import { saveAsTemplate } from "@/app/panel/sablonlar/actions";
 import { requireCoach } from "@/lib/dal";
 import { getFullProgram, type FullProgram } from "@/lib/queries";
 import { sumMacros, kcalFromMacros } from "@/lib/macros";
@@ -52,6 +53,29 @@ export default async function ProgramEditor({
           </Button>
         </Link>
       </div>
+
+      <Card className="space-y-2">
+        <div className="flex items-center gap-2">
+          <BookmarkPlus className="h-4 w-4 text-[var(--primary-glow)]" />
+          <h2 className="text-sm font-semibold">Şablon olarak kaydet</h2>
+        </div>
+        <p className="text-xs text-[var(--muted)]">
+          Bu programı kaydet, başka danışanlara tek tıkla uygula.
+        </p>
+        <form
+          action={saveAsTemplate.bind(null, programId, clientId)}
+          className="flex gap-2"
+        >
+          <Input
+            name="title"
+            placeholder={full.program.title}
+            className="flex-1"
+          />
+          <Button type="submit" variant="outline" size="md">
+            Kaydet
+          </Button>
+        </form>
+      </Card>
 
       <ProgramMetaSection full={full} ids={ids} />
       <NutritionSection full={full} ids={ids} />

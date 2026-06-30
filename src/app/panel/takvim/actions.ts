@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { checkWorkoutBadges } from "@/lib/gamify";
 
 async function currentUser() {
   const supabase = await createClient();
@@ -63,6 +64,7 @@ export async function completeSession(sessionId: string, date: string) {
     .update({ status: "completed", completed_at: new Date().toISOString() })
     .eq("id", sessionId)
     .eq("client_id", user.id);
+  await checkWorkoutBadges(supabase, user.id);
   revalidatePath(`/panel/takvim/${date}`);
   revalidatePath("/panel/takvim");
   revalidatePath("/panel");

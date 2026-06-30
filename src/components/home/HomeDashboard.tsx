@@ -17,6 +17,7 @@ import {
   CalendarCheck,
   Check,
   ChevronRight,
+  Trophy,
 } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
 import { Card } from "@/components/ui";
@@ -31,6 +32,8 @@ type Props = {
   nextControl: string | null;
   todaySessionLabel: string | null;
   todayTasks: DailyTask[];
+  totalWorkouts: number;
+  badges: string[];
 };
 
 export function HomeDashboard({
@@ -41,6 +44,8 @@ export function HomeDashboard({
   nextControl,
   todaySessionLabel,
   todayTasks,
+  totalWorkouts,
+  badges,
 }: Props) {
   const today = new Date(todayISO + "T00:00:00");
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
@@ -137,6 +142,37 @@ export function HomeDashboard({
             value={formatDate(nextControl)}
           />
         </div>
+      </div>
+
+      {/* başarılar */}
+      <div>
+        <h2 className="mb-2 flex items-center gap-1.5 font-semibold">
+          <Trophy className="h-4 w-4 text-[var(--warning)]" /> Başarıların
+        </h2>
+        <Card className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[var(--muted)]">
+              Toplam tamamlanan antrenman
+            </span>
+            <span className="text-lg font-bold">{totalWorkouts}</span>
+          </div>
+          {badges.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {badges.map((b) => (
+                <span
+                  key={b}
+                  className="rounded-full border border-[var(--warning)]/30 bg-[var(--warning)]/10 px-3 py-1 text-xs font-medium"
+                >
+                  {b}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-[var(--muted)]">
+              İlk antrenmanını tamamla, rozet kazanmaya başla! 🏅
+            </p>
+          )}
+        </Card>
       </div>
     </div>
   );

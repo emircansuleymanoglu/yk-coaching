@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Pencil, Phone, Target, FileText } from "lucide-react";
+import { ArrowLeft, Pencil, Phone, Target, FileText, Download } from "lucide-react";
 import { requireCoach } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveProgram, getFullProgram } from "@/lib/queries";
@@ -79,11 +79,21 @@ export default async function ClientDetailPage({
       </Card>
 
       {program ? (
-        <Link href={`/panel/danisanlar/${id}/program/${program.id}`}>
-          <Button className="w-full">
-            <Pencil className="h-4 w-4" /> Programı Düzenle
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href={`/panel/danisanlar/${id}/program/${program.id}`}
+            className="flex-1"
+          >
+            <Button className="w-full">
+              <Pencil className="h-4 w-4" /> Programı Düzenle
+            </Button>
+          </Link>
+          <a href={`/yazdir/${program.id}`} target="_blank" rel="noreferrer">
+            <Button variant="outline" className="h-11">
+              <Download className="h-4 w-4" /> PDF
+            </Button>
+          </a>
+        </div>
       ) : (
         <form action={createProgram}>
           <Button type="submit" size="lg" className="w-full">

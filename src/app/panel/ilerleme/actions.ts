@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createNotification } from "@/lib/notify";
+import { checkCheckinBadges } from "@/lib/gamify";
 
 /** Danışan yeni bir check-in (ilerleme kaydı) ekler. Fotoğraflar client'ta yüklenir. */
 export async function addCheckin(input: {
@@ -29,6 +30,7 @@ export async function addCheckin(input: {
   });
   if (error) return { error: error.message };
 
+  await checkCheckinBadges(supabase, user.id);
   revalidatePath("/panel/ilerleme");
   revalidatePath("/panel");
   return { ok: true };

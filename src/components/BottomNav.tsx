@@ -11,6 +11,7 @@ import {
   LineChart,
   MessageCircle,
   Wallet,
+  BookCopy,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ type NavItem = { href: string; label: string; icon: LucideIcon };
 const coachNav: NavItem[] = [
   { href: "/panel", label: "Panel", icon: LayoutDashboard },
   { href: "/panel/danisanlar", label: "Danışanlar", icon: Users },
+  { href: "/panel/sablonlar", label: "Şablon", icon: BookCopy },
   { href: "/panel/mesajlar", label: "Mesaj", icon: MessageCircle },
   { href: "/panel/odemeler", label: "Ödeme", icon: Wallet },
 ];
